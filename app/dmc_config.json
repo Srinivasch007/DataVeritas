@@ -1,0 +1,36 @@
+{
+  "hop_databases": {
+    "NZ Export": {
+      "database_type": "Netezza",
+      "host": "netezza-server.example.com",
+      "port": 5480,
+      "database": "CIDMTHQA",
+      "username": "db_user",
+      "password": "db_password"
+    },
+    "EDW Stage": {
+      "database_type": "Oracle",
+      "host": "edw-oracle.example.com",
+      "port": 1521,
+      "service_name": "EDWQA1",
+      "username": "edw_user",
+      "password": "edw_password"
+    },
+    "OFSAA Stage": {
+      "database_type": "Oracle",
+      "host": "ofsaa-oracle.example.com",
+      "port": 1521,
+      "service_name": "OFSAAQA1",
+      "username": "ofsaa_user",
+      "password": "ofsaa_password"
+    },
+    "AMLSAS Stage": {
+      "database_type": "Oracle",
+      "host": "amlsas-oracle.example.com",
+      "port": 1521,
+      "service_name": "AMLSASUAT",
+      "username": "amlsas_user",
+      "password": "amlsas_password"
+    }
+  }
+}
