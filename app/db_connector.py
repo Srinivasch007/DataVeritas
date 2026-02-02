@@ -102,7 +102,9 @@ def fetch_table_data(conn, db_type, table_name, columns, limit=100):
     try:
         quoted = _quote_table(db_type, table_name)
         col_list = ", ".join(_quote_col(db_type, c) for c in columns)
-        if db_type == "SQL Server":
+        if limit is None:
+            q = f"SELECT {col_list} FROM {quoted}"
+        elif db_type == "SQL Server":
             q = f"SELECT TOP {limit} {col_list} FROM {quoted}"
         elif db_type == "Oracle":
             q = f"SELECT {col_list} FROM {quoted} WHERE ROWNUM <= {limit}"
@@ -119,14 +121,24 @@ def _connect_netezza(cfg):
         import nzpy
     except ImportError:
         return None, "Install nzpy: pip install nzpy"
+    security_level = cfg.get("securityLevel", 1)
+    log_level = cfg.get("logLevel", 0)
+    try:
+        security_level = int(security_level)
+    except (TypeError, ValueError):
+        return None, "Invalid netezza securityLevel (expected integer)."
+    try:
+        log_level = int(log_level)
+    except (TypeError, ValueError):
+        return None, "Invalid netezza logLevel (expected integer)."
     conn = nzpy.connect(
         user=cfg.get("username"),
         password=cfg.get("password"),
         host=cfg.get("host"),
         port=int(cfg.get("port", 5480)),
         database=cfg.get("database"),
-        securityLevel=1,
-        logLevel=0,
+        securityLevel=security_level,
+        logLevel=log_level,
     )
     return conn, None
 

@@ -36,13 +36,22 @@ def render():
                 matching = r.get("matching_columns", [])
                 st.markdown("**Matching columns**")
                 st.markdown(", ".join(matching) if matching else "*No matching columns.*")
+                mismatch_df = r.get("mismatch_df")
+                if mismatch_df is not None and not mismatch_df.empty:
+                    st.markdown("---")
+                    st.markdown("**Mismatched rows (top 10)**")
+                    st.dataframe(mismatch_df, use_container_width=True, hide_index=True)
+                else:
+                    st.markdown("---")
+                    st.markdown("*No mismatches detected (top 10 view).*")
+
                 src_df = r.get("source_df")
                 if src_df is not None and not src_df.empty:
                     st.markdown("---")
-                    st.markdown("**Source table data (matching columns)**")
+                    st.markdown("**Source table data (matching columns, top 10)**")
                     st.dataframe(src_df, use_container_width=True, hide_index=True)
                 tgt_df = r.get("target_df")
                 if tgt_df is not None and not tgt_df.empty:
                     st.markdown("---")
-                    st.markdown("**Target table data (matching columns)**")
+                    st.markdown("**Target table data (matching columns, top 10)**")
                     st.dataframe(tgt_df, use_container_width=True, hide_index=True)
