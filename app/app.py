@@ -822,6 +822,7 @@ elif page == "Orchestrator":
                     col_cols = find_col(df, ["Columns", "Column"])
                     col_sql = find_col(df, ["SQL Query", "SQLQuery", "SQL", "Query"])
                     col_res = find_col(df, ["Results", "Result"])
+                    col_hop = find_col(df, ["Hop", "Hop Name", "HopName", "Hop Value", "Hop_Value"])
                     col_skip_reg = find_col(df, ["Skip_Regression_Testing", "Skip Regression Testing", "SkipRegressionTesting"])
                     if col_skip_reg is None:
                         for c in df.columns:
@@ -841,7 +842,11 @@ elif page == "Orchestrator":
                         validation_type_raw = str(v(row, col_val))
                         validation_type = " ".join(validation_type_raw.strip().lower().split())
                         computed_status = None
-                        not_matching_msg = "Data is not Matching between the hop."
+                        hop_val = str(v(row, col_hop)).strip() if col_hop is not None else ""
+                        if hop_val and hop_val.lower() not in ("-", "nan", "none"):
+                            not_matching_msg = f"Data is not Matching between the hop {hop_val}."
+                        else:
+                            not_matching_msg = "Data is not Matching between the hop."
                         st.markdown("**SQL Query:**")
                         if sql_val and str(sql_val).strip() not in ("-", "nan", ""):
                             sql_str = str(sql_val).strip()
@@ -857,7 +862,15 @@ elif page == "Orchestrator":
                                         st.dataframe(display_df, use_container_width=True, hide_index=True)
                                         if len(qdf) > 5:
                                             st.caption(f"Showing first 5 of {len(qdf)} rows")
-                                        if validation_type in ("count", "row count"):
+                                        if validation_type in (
+                                            "direct map",
+                                            "business logic",
+                                            "default values",
+                                            "dnp",
+                                            "etl fields",
+                                        ) and len(qdf) > 1:
+                                            computed_status = not_matching_msg
+                                        elif validation_type in ("count", "row count"):
                                             if len(qdf) == 1:
                                                 computed_status = not_matching_msg
                                             elif len(qdf) >= 2:
@@ -874,7 +887,7 @@ elif page == "Orchestrator":
                                                     st.warning("Count validation expects at least 2 columns.")
                                     elif validation_type in ("dnp", "etl fields", "direct map"):
                                         if len(qdf) > 1:
-                                            computed_status = "Data not matching"
+                                            computed_status = not_matching_msg
                                     elif validation_type == "etl":
                                         if len(qdf) < 6:
                                             computed_status = "Data matching as expected"
