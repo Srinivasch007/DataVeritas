@@ -41,7 +41,7 @@ st.markdown("""
     
     [data-testid="stSidebar"] {
         min-width: 260px;
-        background: linear-gradient(180deg, #add8e6 0%, #87ceeb 100%);
+        background: #ECF0F1;
         border-right: 1px solid rgba(0,0,0,0.1);
     }
     
@@ -74,7 +74,7 @@ st.markdown("""
     [data-testid="stSidebar"] .stButton > button {
         padding: 2px 30px 2px 12px !important;
         font-size: 1rem !important;
-        font-weight: 700 !important;
+        font-weight: 400 !important;
         min-height: 30px !important;
         width: 100% !important;
         white-space: nowrap !important;
@@ -82,14 +82,24 @@ st.markdown("""
         display: flex !important;
         justify-content: flex-start !important;
         align-items: center !important;
-        background-color: #000000 !important;
-        color: #ffffff !important;
+        background-color: #87cefa !important;
+        color: #000000 !important;
         margin-left: 12px !important;
     }
+    [data-testid="stSidebar"] button {
+        background-color: #87cefa !important;
+        color: #000000 !important;
+        border: 1px solid #6fbfe6 !important;
+        font-weight: 400 !important;
+    }
+    [data-testid="stSidebar"] button:hover {
+        background-color: #87cefa !important;
+        color: #000000 !important;
+    }
     [data-testid="stSidebar"] .stButton > button p {
-        font-weight: 700 !important;
+        font-weight: 400 !important;
         text-align: left !important;
-        color: #ffffff !important;
+        color: #000000 !important;
     }
     
     .stExpander {
@@ -124,9 +134,25 @@ st.markdown("""
     .stat-label { font-size: 0.95rem; font-weight: 700; color: #f5a623; }
     .stat-value { font-size: 2.1rem; font-weight: 700; color: #ffffff; margin-top: 0.35rem; }
     
-    .main .stButton > button { padding: 10px 20px !important; border-radius: 8px !important; font-weight: 500 !important; }
+    .main .stButton > button {
+        padding: 10px 20px !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        width: 70% !important;
+        margin: 0 auto !important;
+    }
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2 {
-        font-size: 1.5rem !important; font-weight: 700 !important;
+        font-size: 1.9rem !important;
+        font-weight: 700 !important;
+        color: #000000 !important;
+    }
+    [data-testid="stSidebar"] h1 span,
+    [data-testid="stSidebar"] h2 span,
+    [data-testid="stSidebar"] h1 a,
+    [data-testid="stSidebar"] h2 a,
+    [data-testid="stSidebar"] .stMarkdown h1,
+    [data-testid="stSidebar"] .stMarkdown h2 {
+        color: #000000 !important;
     }
     @media print {
         [data-testid="stSidebar"] { display: none !important; }
@@ -397,7 +423,7 @@ with st.sidebar:
     st.markdown("---")
     
     if st.session_state.get("page") == "Orchestrator":
-        with st.expander("Config", expanded=True):
+        with st.expander("Config", expanded=False):
             config_mode = st.radio("Config", ["Default", "Upload"], label_visibility="collapsed", key="config_mode", horizontal=True)
             CONFIG_PATH = Path(__file__).parent / "config.json"
 
@@ -451,7 +477,7 @@ with st.sidebar:
             if "orc_config" in st.session_state:
                 st.caption("Config ready")
 
-        with st.expander("Database", expanded=True):
+        with st.expander("Database", expanded=False):
             col_db, col_btn = st.columns([3, 1], gap="small")
             with col_db:
                 orchestrator_database = st.selectbox(
@@ -485,7 +511,7 @@ with st.sidebar:
             elif "orc_db_conn" in st.session_state and st.session_state["orc_db_conn"]:
                 st.caption("Connected")
 
-        with st.expander("Source", expanded=True):
+        with st.expander("Source", expanded=False):
             orchestrator_source = st.selectbox(
                 "Source",
                 ["Network Folder", "SharePoint", "Upload"],
@@ -587,8 +613,8 @@ with st.sidebar:
                     st.session_state["orc_execute_clicked"] = True
                     st.rerun()
         components.html(
-            '''<button onclick="try{window.top.print()}catch(e){window.print()}" style="padding:0.4rem 0.8rem;background:#1a1a2e;color:white;
-            border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem;width:100%;">Download PDF</button>''',
+            '''<button onclick="try{window.top.print()}catch(e){window.print()}" style="padding:0.4rem 0.8rem;background:#87cefa;color:#000000;
+            border:1px solid #6fbfe6;border-radius:6px;cursor:pointer;font-weight:400;font-size:0.85rem;width:100%;">Download PDF</button>''',
             height=40
         )
 
@@ -631,8 +657,8 @@ with st.sidebar:
         if "recon_error" in st.session_state:
             st.error(st.session_state["recon_error"])
         components.html(
-            '''<button onclick="try{window.top.print()}catch(e){window.print()}" style="padding:0.4rem 0.8rem;background:#1a1a2e;color:white;
-            border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem;width:100%;">Download PDF</button>''',
+            '''<button onclick="try{window.top.print()}catch(e){window.print()}" style="padding:0.4rem 0.8rem;background:#87cefa;color:#000000;
+            border:1px solid #6fbfe6;border-radius:6px;cursor:pointer;font-weight:400;font-size:0.85rem;width:100%;">Download PDF</button>''',
             height=40
         )
 
@@ -687,8 +713,8 @@ with st.sidebar:
         if "dmc_error" in st.session_state:
             st.error(st.session_state["dmc_error"])
         components.html(
-            '''<button onclick="try{window.top.print()}catch(e){window.print()}" style="padding:0.4rem 0.8rem;background:#1a1a2e;color:white;
-            border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem;width:100%;">Download PDF</button>''',
+            '''<button onclick="try{window.top.print()}catch(e){window.print()}" style="padding:0.4rem 0.8rem;background:#87cefa;color:#000000;
+            border:1px solid #6fbfe6;border-radius:6px;cursor:pointer;font-weight:400;font-size:0.85rem;width:100%;">Download PDF</button>''',
             height=40
         )
 
@@ -749,7 +775,7 @@ elif page == "Orchestrator":
     if "orc_excel_error" in st.session_state:
         st.error(st.session_state["orc_excel_error"])
 
-    col_data, col_ctrl = st.columns([3, 1])
+    col_data = st.container()
     with col_data:
         if "orc_excel_data" in st.session_state:
             df_all = st.session_state["orc_excel_data"]
@@ -766,6 +792,10 @@ elif page == "Orchestrator":
                 st.dataframe(df, use_container_width=True, hide_index=True)
                 st.markdown("---")
 
+                col_res = None
+                col_skip_reg = None
+                cnt_success = 0
+                cnt_fail = 0
                 if st.session_state.get("orc_execute_clicked"):
                     st.markdown('<p style="color: #0066cc; font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0;">Execution of the Test Cases is Started......</p>', unsafe_allow_html=True)
                 if not df.empty and st.session_state.get("orc_execute_clicked"):
@@ -794,8 +824,6 @@ elif page == "Orchestrator":
 
                     conn = st.session_state.get("orc_db_conn")
                     db_type = st.session_state.get("orchestrator_database", "Netezza")
-                    cnt_success = 0
-                    cnt_fail = 0
                     for idx, row in df.iterrows():
                         v = lambda r, c: r.get(c, "-") if c is not None else "-"
                         st.markdown(f"**Test Case:** {v(row, col_sno)}")
@@ -876,7 +904,7 @@ elif page == "Orchestrator":
                         st.markdown(f"**Results:** <span style='{res_style}'>{res_val}</span>", unsafe_allow_html=True)
                         st.markdown("---")
 
-                if col_res is not None:
+                if st.session_state.get("orc_execute_clicked") and col_res is not None:
                     if col_skip_reg is not None:
                         skip_series = df[col_skip_reg].fillna("").astype(str).str.strip().str.upper()
                         cnt_skipped = (skip_series == "Y").sum()
@@ -900,25 +928,7 @@ elif page == "Orchestrator":
         else:
             st.info("Configure source in the left panel and load data.")
 
-    with col_ctrl:
-        if "orc_db_conn" in st.session_state and st.session_state["orc_db_conn"]:
-            st.markdown("**Run query**")
-            query = st.text_area("SQL", placeholder="SELECT * FROM tbl LIMIT 10", key="orc_db_query", height=100)
-            exe_clicked = st.button("Execute", key="db_execute")
-            if exe_clicked and query and query.strip():
-                try:
-                    from db_connector import run_query
-                    df = run_query(st.session_state["orc_db_conn"], st.session_state.get("orchestrator_database", "Netezza"), query.strip())
-                    if df is not None and not df.empty:
-                        st.session_state["orc_excel_data"] = {"Query Result": df}
-                        st.session_state["orc_excel_filename"] = "Query Result"
-                        st.session_state["orc_selected_sheet"] = "Query Result"
-                        st.session_state.pop("orc_execute_clicked", None)
-                        st.rerun()
-                    elif df is not None:
-                        st.info("No rows.")
-                except Exception as e:
-                    st.error(str(e))
+    # Removed the right-side "Run query" panel.
 
 elif page == "DMC":
     render_dmc()
