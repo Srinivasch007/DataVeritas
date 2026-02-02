@@ -871,8 +871,11 @@ elif page == "Orchestrator":
                                             "default values",
                                             "dnp",
                                             "etl fields",
-                                        ) and len(qdf) > 1:
-                                            computed_status = not_matching_msg
+                                        ):
+                                            if len(qdf) > 1:
+                                                computed_status = not_matching_msg
+                                            else:
+                                                computed_status = matching_msg
                                         elif validation_type in ("count", "row count"):
                                             if len(qdf) == 1:
                                                 computed_status = not_matching_msg
