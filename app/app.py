@@ -924,7 +924,7 @@ elif page == "Orchestrator":
                         res_lower = res_val.lower()
                         if res_lower == "success":
                             cnt_success += 1
-                        elif res_lower == "fail" or res_lower == "data not matching" or res_lower == "data is not matching between the hop.":
+                        elif res_lower == "data not matching" or res_lower.startswith("data is not matching between the hop"):
                             cnt_fail += 1
                         if res_lower == "success":
                             res_style = "color: #008000; font-weight: bold;"
@@ -952,7 +952,7 @@ elif page == "Orchestrator":
                     else:
                         cnt_skipped = 0
                     st.markdown("---")
-                    cnt_total = cnt_success + cnt_fail + cnt_skipped
+                    cnt_total = len(df)
                     c1, c2, c3, c4 = st.columns(4)
                     with c1:
                         _render_stat_card("# Total Test Cases", cnt_total, "🧾")
