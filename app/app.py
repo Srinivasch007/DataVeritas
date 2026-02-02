@@ -844,9 +844,12 @@ elif page == "Orchestrator":
                         computed_status = None
                         hop_val = str(v(row, col_hop)).strip() if col_hop is not None else ""
                         if hop_val and hop_val.lower() not in ("-", "nan", "none"):
-                            not_matching_msg = f"Data is not Matching between the hop {hop_val}."
+                            hop_label = f"Hop {hop_val}"
                         else:
-                            not_matching_msg = "Data is not Matching between the hop."
+                            hop_label = "Hop"
+                        not_matching_msg = f"Failed ✗, Data is not matching in {hop_label}"
+                        matching_msg = f"Success ✓, Data is matching in {hop_label}"
+                        skipped_msg = "Skipped, Validation is skipped."
                         st.markdown("**SQL Query:**")
                         if sql_val and str(sql_val).strip() not in ("-", "nan", ""):
                             sql_str = str(sql_val).strip()
@@ -880,7 +883,7 @@ elif page == "Orchestrator":
                                                     if pd.isna(first_val) or pd.isna(second_val):
                                                         computed_status = not_matching_msg
                                                     elif str(first_val).strip() == str(second_val).strip():
-                                                        computed_status = "Success"
+                                                        computed_status = matching_msg
                                                     else:
                                                         computed_status = not_matching_msg
                                                 else:
@@ -890,25 +893,25 @@ elif page == "Orchestrator":
                                             computed_status = not_matching_msg
                                     elif validation_type == "etl":
                                         if len(qdf) < 6:
-                                            computed_status = "Data matching as expected"
+                                            computed_status = matching_msg
                                     elif validation_type in ("business logic", "business_logic", "businesslogic"):
                                         if qdf is None or qdf.empty:
-                                            computed_status = "Success"
+                                            computed_status = matching_msg
                                         else:
-                                            computed_status = "Data not matching"
+                                            computed_status = not_matching_msg
                                     elif validation_type in ("default values", "default"):
                                         if len(qdf) == 1:
-                                            computed_status = "Data is loaded as expected"
+                                            computed_status = matching_msg
                                     elif qdf is not None:
                                         if validation_type in ("dnp", "etl fields", "direct map"):
-                                            computed_status = "Data is Matching as expected"
-                                            st.caption("Data is Matching as expected")
+                                            computed_status = matching_msg
+                                            st.caption(matching_msg)
                                         elif validation_type == "etl":
-                                            computed_status = "Data matching as expected"
-                                            st.caption("Data matching as expected")
+                                            computed_status = matching_msg
+                                            st.caption(matching_msg)
                                         elif validation_type in ("business logic", "business_logic", "businesslogic"):
-                                            computed_status = "Success"
-                                            st.caption("Success")
+                                            computed_status = matching_msg
+                                            st.caption(matching_msg)
                                         else:
                                             st.caption("Query returned no rows.")
                                 except Exception as ex:
@@ -917,21 +920,26 @@ elif page == "Orchestrator":
                                 st.caption("Connect to database to execute query.")
                         else:
                             st.markdown("-")
-                        if not conn and not validation_executed:
+                        row_skipped = False
+                        if col_skip_reg is not None:
+                            row_skipped = str(v(row, col_skip_reg)).strip().upper() == "Y"
+                        if row_skipped:
+                            res_val = skipped_msg
+                        elif not conn and not validation_executed:
                             res_val = "Connect to database to run validation"
                         else:
                             res_val = computed_status or str(v(row, col_res)).strip()
                         res_lower = res_val.lower()
-                        if res_lower == "success":
+                        if res_lower.startswith("success"):
                             cnt_success += 1
-                        elif res_lower == "data not matching" or res_lower.startswith("data is not matching between the hop"):
+                        elif res_lower.startswith("failed"):
                             cnt_fail += 1
-                        if res_lower == "success":
+                        if res_lower.startswith("success"):
                             res_style = "color: #008000; font-weight: bold;"
-                        elif res_lower == "fail":
+                        elif res_lower.startswith("failed"):
                             res_style = "color: #cc0000; font-weight: bold;"
-                        elif res_lower == "data is loaded as expected":
-                            res_style = "color: #1e90ff; font-weight: bold;"
+                        elif res_lower.startswith("skipped"):
+                            res_style = "color: #000000; font-weight: bold; font-style: italic;"
                         else:
                             res_style = "color: #000000;"
                         st.markdown(f"**Results:** <span style='{res_style}'>{res_val}</span>", unsafe_allow_html=True)
