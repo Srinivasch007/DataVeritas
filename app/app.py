@@ -511,6 +511,13 @@ with st.sidebar:
             elif "orc_db_conn" in st.session_state and st.session_state["orc_db_conn"]:
                 st.caption("Connected")
 
+        st.toggle(
+            "Proceed after Row Count fail",
+            value=True,
+            key="orc_proceed_on_row_count_fail",
+            help="If off, stop processing remaining test cases after a row count validation fails.",
+        )
+
         with st.expander("Source", expanded=False):
             orchestrator_source = st.selectbox(
                 "Source",
@@ -825,6 +832,7 @@ elif page == "Orchestrator":
                     conn = st.session_state.get("orc_db_conn")
                     db_type = st.session_state.get("orchestrator_database", "Netezza")
                     for idx, row in df.iterrows():
+                        validation_executed = False
                         v = lambda r, c: r.get(c, "-") if c is not None else "-"
                         st.markdown(f"**Test Case:** {v(row, col_sno)}")
                         st.markdown(f"**Validation Type:** {v(row, col_val)}")
@@ -842,33 +850,39 @@ elif page == "Orchestrator":
                                 try:
                                     from db_connector import run_query
                                     qdf = run_query(conn, db_type, sql_str)
+                                    validation_executed = True
                                     if qdf is not None and not qdf.empty:
                                         display_df = qdf.head(5)
                                         st.markdown("**Query Results:**")
                                         st.dataframe(display_df, use_container_width=True, hide_index=True)
                                         if len(qdf) > 5:
                                             st.caption(f"Showing first 5 of {len(qdf)} rows")
-                                    if validation_type in ("count", "row count"):
-                                        if len(qdf) == 1:
-                                            computed_status = not_matching_msg
-                                        elif len(qdf) >= 2:
-                                            if qdf.shape[1] >= 2:
-                                                first_val = qdf.iloc[0, 1]
-                                                second_val = qdf.iloc[1, 1]
-                                                if pd.isna(first_val) or pd.isna(second_val):
-                                                    computed_status = not_matching_msg
-                                                elif str(first_val).strip() == str(second_val).strip():
-                                                    computed_status = "Success"
+                                        if validation_type in ("count", "row count"):
+                                            if len(qdf) == 1:
+                                                computed_status = not_matching_msg
+                                            elif len(qdf) >= 2:
+                                                if qdf.shape[1] >= 2:
+                                                    first_val = qdf.iloc[0, 1]
+                                                    second_val = qdf.iloc[1, 1]
+                                                    if pd.isna(first_val) or pd.isna(second_val):
+                                                        computed_status = not_matching_msg
+                                                    elif str(first_val).strip() == str(second_val).strip():
+                                                        computed_status = "Success"
+                                                    else:
+                                                        computed_status = not_matching_msg
                                                 else:
-                                                    computed_status = not_matching_msg
-                                            else:
-                                                st.warning("Count validation expects at least 2 columns.")
+                                                    st.warning("Count validation expects at least 2 columns.")
                                     elif validation_type in ("dnp", "etl fields", "direct map"):
                                         if len(qdf) > 1:
                                             computed_status = "Data not matching"
                                     elif validation_type == "etl":
                                         if len(qdf) < 6:
                                             computed_status = "Data matching as expected"
+                                    elif validation_type in ("business logic", "business_logic", "businesslogic"):
+                                        if qdf is None or qdf.empty:
+                                            computed_status = "Success"
+                                        else:
+                                            computed_status = "Data not matching"
                                     elif validation_type in ("default values", "default"):
                                         if len(qdf) == 1:
                                             computed_status = "Data is loaded as expected"
@@ -879,6 +893,9 @@ elif page == "Orchestrator":
                                         elif validation_type == "etl":
                                             computed_status = "Data matching as expected"
                                             st.caption("Data matching as expected")
+                                        elif validation_type in ("business logic", "business_logic", "businesslogic"):
+                                            computed_status = "Success"
+                                            st.caption("Success")
                                         else:
                                             st.caption("Query returned no rows.")
                                 except Exception as ex:
@@ -887,7 +904,10 @@ elif page == "Orchestrator":
                                 st.caption("Connect to database to execute query.")
                         else:
                             st.markdown("-")
-                        res_val = computed_status or str(v(row, col_res)).strip()
+                        if not conn and not validation_executed:
+                            res_val = "Connect to database to run validation"
+                        else:
+                            res_val = computed_status or str(v(row, col_res)).strip()
                         res_lower = res_val.lower()
                         if res_lower == "success":
                             cnt_success += 1
@@ -903,6 +923,14 @@ elif page == "Orchestrator":
                             res_style = "color: #000000;"
                         st.markdown(f"**Results:** <span style='{res_style}'>{res_val}</span>", unsafe_allow_html=True)
                         st.markdown("---")
+
+                        if (
+                            validation_type in ("count", "row count")
+                            and computed_status == not_matching_msg
+                            and not st.session_state.get("orc_proceed_on_row_count_fail", True)
+                        ):
+                            st.warning("Row count validation failed; stopping further execution.")
+                            break
 
                 if st.session_state.get("orc_execute_clicked") and col_res is not None:
                     if col_skip_reg is not None:
