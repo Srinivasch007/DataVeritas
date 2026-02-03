@@ -673,7 +673,14 @@ with st.sidebar:
                 if isinstance(df_all, dict):
                     sheet_list = list(df_all.keys())
                     sheet_options = (["ALL"] + sheet_list) if len(sheet_list) > 1 else sheet_list
-                    st.session_state["orc_selected_sheet"] = st.selectbox("Select sheet", sheet_options, key="orc_sheet_select", label_visibility="visible")
+                    default_index = 1 if len(sheet_options) > 1 else 0
+                    st.session_state["orc_selected_sheet"] = st.selectbox(
+                        "Select sheet",
+                        sheet_options,
+                        key="orc_sheet_select",
+                        label_visibility="visible",
+                        index=default_index,
+                    )
                 st.markdown("---")
                 if st.button("Execute", key="orc_execute_tests", type="primary", use_container_width=True):
                     st.session_state["orc_execute_clicked"] = True
