@@ -29,6 +29,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Session helpers
+def _clear_state(prefixes):
+    """Remove session_state keys with matching prefixes."""
+    for k in list(st.session_state.keys()):
+        if any(k.startswith(p) for p in prefixes):
+            st.session_state.pop(k, None)
+
 # Custom styling
 st.markdown("""
 <style>
@@ -470,6 +477,11 @@ with st.sidebar:
     st.markdown("---")
     
     if st.session_state.get("page") == "Orchestrator":
+        if st.button("Clear Data", key="orc_clear_data", use_container_width=True):
+            _clear_state(["orc_"])
+            st.session_state.pop("page", None)
+            st.session_state["page"] = "Orchestrator"
+            st.rerun()
         with st.expander("Config", expanded=False):
             config_mode = st.radio("Config", ["Default", "Upload"], label_visibility="collapsed", key="config_mode", horizontal=True)
             CONFIG_PATH = Path(__file__).parent / "config.json"
@@ -673,6 +685,11 @@ with st.sidebar:
         )
 
     elif st.session_state.get("page") == "Recon":
+        if st.button("Clear Data", key="recon_clear_data", use_container_width=True):
+            _clear_state(["recon_"])
+            st.session_state.pop("page", None)
+            st.session_state["page"] = "Recon"
+            st.rerun()
         db_options = ["Netezza", "Snowflake", "SQL Server", "PostgreSQL", "MySQL", "Oracle"]
         recon_mode = st.radio("Input", ["Manual", "Upload Excel"], key="recon_mode", horizontal=True, label_visibility="collapsed")
         join_cols_input = st.text_input(
@@ -726,6 +743,11 @@ with st.sidebar:
         )
 
     elif st.session_state.get("page") == "DMC":
+        if st.button("Clear Data", key="dmc_clear_data", use_container_width=True):
+            _clear_state(["dmc_"])
+            st.session_state.pop("page", None)
+            st.session_state["page"] = "DMC"
+            st.rerun()
         with st.expander("Config", expanded=True):
             dmc_config_mode = st.radio("Config", ["Default", "Upload"], label_visibility="collapsed", key="dmc_config_mode", horizontal=True)
             DMC_CONFIG_PATH = Path(__file__).parent / "dmc_config.json"
