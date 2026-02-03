@@ -25,6 +25,7 @@ def render():
                     out = grp[display_cols].copy()
                     out.columns = ["Table Name", "Count"][:len(display_cols)]
                     st.dataframe(out, use_container_width=True, hide_index=True)
+            _render_hop_results()
         else:
             _render_hop_results()
     elif "dmc_results" in st.session_state:

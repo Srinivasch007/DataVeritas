@@ -196,6 +196,8 @@ def _run_recon_single(source_db, source_table, target_db, target_table, config):
                 not_in_target.append(c)
         src_df, tgt_df = pd.DataFrame(), pd.DataFrame()
         mismatch_head = pd.DataFrame()
+        joined_head = pd.DataFrame()
+        join_cols_used = []
         if matching:
             matching_src_cols = [c for c in src_cols if c.lower() in tgt_lower]
             src_df, err = fetch_table_data(src_conn, source_db, source_table, matching_src_cols, limit=None)
@@ -207,17 +209,31 @@ def _run_recon_single(source_db, source_table, target_db, target_table, config):
                 return {"error": f"Fetch target data: {err}"}
             tgt_df = tgt_df if tgt_df is not None else pd.DataFrame()
             if not src_df.empty or not tgt_df.empty:
-                src_df = src_df.reset_index(drop=True)
-                tgt_df = tgt_df.reset_index(drop=True)
-                combined = src_df.merge(
-                    tgt_df,
-                    left_index=True,
-                    right_index=True,
-                    how="outer",
-                    suffixes=("_source", "_target"),
-                )
+                join_cols = st.session_state.get("recon_join_cols", [])
+                if join_cols:
+                    join_cols_used = [c for c in join_cols if c in src_df.columns and c in tgt_df.columns]
+                if not join_cols_used:
+                    join_cols_used = [c for c in matching if c in src_df.columns and c in tgt_df.columns][:3]
+                if join_cols_used:
+                    combined = src_df.merge(
+                        tgt_df,
+                        on=join_cols_used,
+                        how="outer",
+                        suffixes=("_source", "_target"),
+                    )
+                else:
+                    src_df = src_df.reset_index(drop=True)
+                    tgt_df = tgt_df.reset_index(drop=True)
+                    combined = src_df.merge(
+                        tgt_df,
+                        left_index=True,
+                        right_index=True,
+                        how="outer",
+                        suffixes=("_source", "_target"),
+                    )
                 diff_mask = pd.Series(False, index=combined.index)
-                for col in matching:
+                compare_cols = [c for c in matching if c not in join_cols_used]
+                for col in compare_cols:
                     src_col = f"{col}_source"
                     tgt_col = f"{col}_target"
                     if src_col in combined.columns and tgt_col in combined.columns:
@@ -226,12 +242,15 @@ def _run_recon_single(source_db, source_table, target_db, target_table, config):
                         col_diff = ~(s.eq(t) | (s.isna() & t.isna()))
                         diff_mask = diff_mask | col_diff
                 mismatch_head = combined[diff_mask].head(10)
+                joined_head = combined.head(10)
         return {
             "source_db": source_db, "source_table": source_table,
             "target_db": target_db, "target_table": target_table,
             "matching_columns": matching, "columns_not_in_target": not_in_target,
             "source_df": src_df.head(10), "target_df": tgt_df.head(10),
             "mismatch_df": mismatch_head,
+            "joined_df": joined_head,
+            "join_cols_used": join_cols_used,
         }
     finally:
         try:
@@ -656,6 +675,15 @@ with st.sidebar:
     elif st.session_state.get("page") == "Recon":
         db_options = ["Netezza", "Snowflake", "SQL Server", "PostgreSQL", "MySQL", "Oracle"]
         recon_mode = st.radio("Input", ["Manual", "Upload Excel"], key="recon_mode", horizontal=True, label_visibility="collapsed")
+        join_cols_input = st.text_input(
+            "Join columns (comma-separated, optional)",
+            key="recon_join_cols_input",
+            help="Leave blank to auto-use first 3 matching columns.",
+        )
+        if join_cols_input:
+            st.session_state["recon_join_cols"] = [c.strip() for c in join_cols_input.split(",") if c.strip()]
+        else:
+            st.session_state["recon_join_cols"] = []
         if recon_mode == "Upload Excel":
             template_path = Path(__file__).parent / "recon_template.xlsx"
             if template_path.exists():

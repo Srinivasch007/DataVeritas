@@ -36,6 +36,16 @@ def render():
                 matching = r.get("matching_columns", [])
                 st.markdown("**Matching columns**")
                 st.markdown(", ".join(matching) if matching else "*No matching columns.*")
+                join_cols_used = r.get("join_cols_used", [])
+                if join_cols_used:
+                    st.markdown("---")
+                    st.markdown("**Join columns used**")
+                    st.markdown(", ".join(join_cols_used))
+                joined_df = r.get("joined_df")
+                if joined_df is not None and not joined_df.empty:
+                    st.markdown("---")
+                    st.markdown("**Joined sample (top 10)**")
+                    st.dataframe(joined_df, use_container_width=True, hide_index=True)
                 mismatch_df = r.get("mismatch_df")
                 if mismatch_df is not None and not mismatch_df.empty:
                     st.markdown("---")
