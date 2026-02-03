@@ -337,6 +337,7 @@ def _run_dmc():
     schema_col = _find_dmc_col(df, ["Schema Name", "SchemaName", "Schema"])
     filter_col = _find_dmc_col(df, ["Filter Col 1", "Filter Col1", "Filter_Col_1"])
     filter_val_col = _find_dmc_col(df, ["Filter Col 1 Val", "Filter Col1 Val", "Filter_Col_1_Val"])
+    group_col = _find_dmc_col(df, ["Grouping", "Group", "Category", "Group Name", "GroupName"])
     if not all([hop_col, tbl_col, schema_col]):
         st.session_state["dmc_error"] = "Excel must have columns: Hop Name, Table Name, Schema Name"
         return
@@ -353,12 +354,17 @@ def _run_dmc():
             return "'" + s.replace("'", "''") + "'"
 
     queries = {}
+    table_to_grouping = {}
     for hop_name, grp in df.groupby(hop_col):
         hop_val = str(hop_name).strip() if pd.notna(hop_name) else "Unknown"
         parts = []
         for _, row in grp.iterrows():
             schema = str(row[schema_col]).strip() if pd.notna(row[schema_col]) else ""
             table = str(row[tbl_col]).strip() if pd.notna(row[tbl_col]) else ""
+            if group_col:
+                grouping = str(row[group_col]).strip() if pd.notna(row[group_col]) else ""
+                if table and grouping:
+                    table_to_grouping[(hop_val, table)] = grouping
             if schema and table:
                 full_name = f'"{schema}"."{table}"'
                 base = f"SELECT '{table}' AS tablename, COUNT(*) FROM {full_name}"
