@@ -670,6 +670,7 @@ with st.sidebar:
 
             if "orc_excel_data" in st.session_state:
                 df_all = st.session_state["orc_excel_data"]
+                sheet_options = []
                 if isinstance(df_all, dict):
                     sheet_list = list(df_all.keys())
                     sheet_options = (["ALL"] + sheet_list) if len(sheet_list) > 1 else sheet_list
@@ -677,7 +678,7 @@ with st.sidebar:
                     st.session_state["orc_selected_sheet"] = st.selectbox(
                         "Select sheet",
                         sheet_options,
-                        key="orc_sheet_select",
+                        key="orc_sheet_select_sidebar",
                         label_visibility="visible",
                         index=default_index,
                     )
