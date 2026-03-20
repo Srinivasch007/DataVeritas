@@ -882,16 +882,18 @@ elif page == "Orchestrator":
 
             for sheet_name, df in sheets_to_show:
                 st.markdown(f'<p style="color: #0066cc; font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0;">{excel_name} - {sheet_name}</p>', unsafe_allow_html=True)
-                st.dataframe(df, use_container_width=True, hide_index=True)
-                st.markdown("---")
+                df_placeholder = st.empty()
 
                 col_res = None
                 col_skip_reg = None
                 cnt_success = 0
                 cnt_fail = 0
+                status_list = None
+                df_placeholder.dataframe(df, use_container_width=True, hide_index=True)
                 if st.session_state.get("orc_execute_clicked"):
                     st.markdown('<p style="color: #0066cc; font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0;">Execution of the Test Cases is Started......</p>', unsafe_allow_html=True)
                 if not df.empty and st.session_state.get("orc_execute_clicked"):
+                    status_list = []
                     def find_col(df, names):
                         cols_lower = {str(c).strip().lower(): c for c in df.columns}
                         for n in names:
@@ -904,6 +906,7 @@ elif page == "Orchestrator":
                         return None
 
                     col_sno = find_col(df, ["S_No", "SNo", "Test Case", "TestCase"])
+                    col_desc = find_col(df, ["Test_Case_Description", "Test Case Description", "TestCaseDescription", "Description"])
                     col_val = find_col(df, ["Validation_Type", "Validation Type", "ValidationType"])
                     col_cols = find_col(df, ["Columns", "Column"])
                     col_sql = find_col(df, ["SQL Query", "SQLQuery", "SQL", "Query"])
@@ -921,7 +924,8 @@ elif page == "Orchestrator":
                     for idx, row in df.iterrows():
                         validation_executed = False
                         v = lambda r, c: r.get(c, "-") if c is not None else "-"
-                        st.markdown(f"**Test Case:** {v(row, col_sno)}")
+                        desc_val = v(row, col_desc) if col_desc is not None else "-"
+                        st.markdown(f"**Test Case#{v(row, col_sno)}:** {desc_val}")
                         st.markdown(f"**Validation Type:** {v(row, col_val)}")
                         st.markdown(f"**Columns:** {v(row, col_cols)}")
                         sql_val = v(row, col_sql)
@@ -953,6 +957,7 @@ elif page == "Orchestrator":
                                             st.caption(f"Showing first 5 of {len(qdf)} rows")
                                         if validation_type in (
                                             "direct map",
+                                            "direct mapping",
                                             "business logic",
                                             "default values",
                                             "dnp",
@@ -977,7 +982,7 @@ elif page == "Orchestrator":
                                                         computed_status = not_matching_msg
                                                 else:
                                                     st.warning("Count validation expects at least 2 columns.")
-                                    elif validation_type in ("dnp", "etl fields", "direct map"):
+                                    elif validation_type in ("dnp", "etl fields", "direct map", "direct mapping"):
                                         if len(qdf) > 1:
                                             computed_status = not_matching_msg
                                     elif validation_type == "etl":
@@ -992,7 +997,7 @@ elif page == "Orchestrator":
                                         if len(qdf) == 1:
                                             computed_status = matching_msg
                                     elif qdf is not None:
-                                        if validation_type in ("dnp", "etl fields", "direct map"):
+                                        if validation_type in ("dnp", "etl fields", "direct map", "direct mapping"):
                                             computed_status = matching_msg
                                             st.caption(matching_msg)
                                         elif validation_type == "etl":
@@ -1024,6 +1029,15 @@ elif page == "Orchestrator":
                         elif res_lower.startswith("failed"):
                             cnt_fail += 1
                         if res_lower.startswith("success"):
+                            status_icon = "✓"
+                        elif res_lower.startswith("failed"):
+                            status_icon = "✗"
+                        elif res_lower.startswith("skipped"):
+                            status_icon = "⏭"
+                        else:
+                            status_icon = ""
+                        status_list.append(status_icon)
+                        if res_lower.startswith("success"):
                             res_style = "color: #008000; font-weight: bold;"
                         elif res_lower.startswith("failed"):
                             res_style = "color: #cc0000; font-weight: bold;"
@@ -1041,6 +1055,15 @@ elif page == "Orchestrator":
                         ):
                             st.warning("Row count validation failed; stopping further execution.")
                             break
+
+                    if status_list is not None and len(status_list) < len(df):
+                        status_list.extend([""] * (len(df) - len(status_list)))
+
+                if status_list:
+                    df_display = df.copy()
+                    df_display["Status"] = status_list
+                    df_placeholder.dataframe(df_display, use_container_width=True, hide_index=True)
+                st.markdown("---")
 
                 if st.session_state.get("orc_execute_clicked") and col_res is not None:
                     if col_skip_reg is not None:
